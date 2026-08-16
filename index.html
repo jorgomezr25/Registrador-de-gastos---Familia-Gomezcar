@@ -11,36 +11,29 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f5f5f5; }
     body { padding-bottom: 20px; }
-    
     .header { background: #fff; border-bottom: 0.5px solid #e0e0e0; padding: 16px; text-align: center; position: sticky; top: 0; z-index: 10; }
     .header h1 { font-size: 18px; color: #1a1a1a; font-weight: 500; }
     .header p { font-size: 13px; color: #999; margin-top: 4px; }
-    
     .tabs { display: flex; gap: 0; background: #fff; border-bottom: 0.5px solid #e0e0e0; }
     .tab-btn { flex: 1; padding: 12px; border: none; background: none; font-size: 13px; color: #999; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
     .tab-btn.active { color: #378add; border-bottom-color: #378add; }
-    
     .container { max-width: 100%; }
     .section { display: none; padding: 16px; }
     .section.active { display: block; }
-    
     .form-group { margin-bottom: 16px; }
     .form-group label { display: block; font-size: 13px; color: #666; margin-bottom: 6px; font-weight: 500; }
     .form-group select, .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 0.5px solid #d0d0d0; border-radius: 6px; font-size: 16px; font-family: inherit; }
     .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #378add; }
     .form-group textarea { resize: vertical; min-height: 60px; }
-    
     .btn { width: 100%; padding: 12px; margin-top: 8px; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; font-weight: 500; }
     .btn-primary { background: #378add; color: white; }
     .btn-primary:active { opacity: 0.9; }
     .btn-primary:disabled { background: #ccc; cursor: not-allowed; }
-    
     .card { background: white; border-radius: 8px; border: 0.5px solid #e0e0e0; padding: 16px; margin-bottom: 12px; }
     .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
     .stat { background: #f9f9f9; padding: 12px; border-radius: 6px; border: 0.5px solid #e0e0e0; }
     .stat-label { font-size: 12px; color: #999; margin-bottom: 4px; }
     .stat-value { font-size: 20px; font-weight: 500; color: #1a1a1a; }
-    
     .list-item { padding: 12px; border-bottom: 0.5px solid #e0e0e0; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
     .list-item:last-child { border-bottom: none; }
     .list-item-left { flex: 1; }
@@ -49,21 +42,16 @@
     .list-item-meta { font-size: 11px; color: #bbb; margin-top: 2px; }
     .list-item-amount { font-size: 15px; font-weight: 500; color: #378add; text-align: right; white-space: nowrap; }
     .list-item-badge { display: inline-block; padding: 2px 6px; font-size: 10px; background: #e3f2fd; color: #1976d2; border-radius: 3px; margin-top: 4px; }
-    
     .empty-state { text-align: center; padding: 40px 16px; color: #999; }
     .empty-state p { font-size: 14px; }
-    
     .delete-btn { background: #f5f5f5; border: none; color: #999; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; }
     .delete-btn:active { background: #e0e0e0; }
-    
     .summary-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 0.5px solid #e0e0e0; }
     .summary-row:last-child { border-bottom: none; }
     .summary-label { font-size: 14px; color: #666; }
     .summary-value { font-size: 14px; font-weight: 500; color: #1a1a1a; }
-    
     .progress-bar { width: 100%; height: 6px; background: #e0e0e0; border-radius: 3px; overflow: hidden; margin-top: 8px; }
     .progress-fill { height: 100%; background: #378add; border-radius: 3px; }
-    
     .sync-section { background: #f0f7ff; border: 0.5px solid #90caf9; border-radius: 6px; padding: 12px; margin-bottom: 16px; }
     .sync-status { font-size: 13px; color: #1976d2; margin-bottom: 8px; }
     .alert { padding: 12px; border-radius: 6px; margin-bottom: 12px; font-size: 13px; }
@@ -91,31 +79,26 @@
           <label>Fecha</label>
           <input type="date" id="date" required>
         </div>
-        
         <div class="form-group">
           <label>Categoría</label>
           <select id="category" onchange="updateSubcategories()">
             <option value="">Elige una categoría</option>
           </select>
         </div>
-        
         <div class="form-group">
           <label>Subcategoría</label>
           <select id="subcategory">
             <option value="">Elige una subcategoría</option>
           </select>
         </div>
-        
         <div class="form-group">
           <label>Descripción (opcional)</label>
           <textarea id="description" placeholder="Ej: Frutas, verduras, lácteos..."></textarea>
         </div>
-        
         <div class="form-group">
           <label>Monto ($)</label>
           <input type="number" id="amount" placeholder="0" min="0">
         </div>
-        
         <div class="form-group">
           <label>Medio de pago</label>
           <select id="method">
@@ -127,7 +110,6 @@
             <option value="Tarjeta Falabella Jorge">Tarjeta Falabella Jorge</option>
           </select>
         </div>
-        
         <button class="btn btn-primary" onclick="registerPayment()">Registrar pago</button>
       </div>
     </div>
@@ -145,7 +127,6 @@
               <div class="stat-value" id="stat-executed">$0</div>
             </div>
           </div>
-          
           <div class="summary-label" style="font-size: 12px; color: #999; margin-top: 12px;">Avance</div>
           <div class="progress-bar">
             <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
@@ -155,12 +136,10 @@
             <span id="remaining" style="color: #378add;">$0 disponible</span>
           </div>
         </div>
-        
         <div class="card">
           <div style="font-size: 14px; font-weight: 500; margin-bottom: 12px; color: #1a1a1a;">Por categoría</div>
           <div id="category-summary"></div>
         </div>
-        
         <div class="card">
           <div style="font-size: 14px; font-weight: 500; margin-bottom: 12px; color: #1a1a1a;">Por medio de pago</div>
           <div id="method-summary"></div>
@@ -183,16 +162,13 @@
       <div style="padding: 16px;">
         <div class="card">
           <div style="font-size: 16px; font-weight: 500; margin-bottom: 16px; color: #1a1a1a;">Sincronizar con Google Sheets</div>
-          
           <div id="sync-alert"></div>
-          
           <div class="sync-section">
             <div class="sync-status" id="sync-status">
               Registros no sincronizados: <strong id="unsync-count">0</strong>
             </div>
             <button class="btn btn-primary" onclick="syncToSheets()" id="sync-btn">Sincronizar ahora</button>
           </div>
-          
           <div class="card" style="margin-top: 0; padding: 0;">
             <div style="font-size: 14px; font-weight: 500; padding: 16px; color: #1a1a1a; border-bottom: 0.5px solid #e0e0e0;">Estado de sincronización</div>
             <div id="sync-history" style="padding: 0;"></div>
@@ -203,9 +179,7 @@
   </div>
   
   <script>
-    const APPS_SCRIPT_ID = "14IUhdUVqwQWS0x3od7Ex0CV_A4HaVCjZ8PucnUWOJulawOQYKzvXsx5i";
-    const APPS_SCRIPT_URL = `https://script.google.com/macros/s/${APPS_SCRIPT_ID}/exec`;
-    
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyP3UzDqwafKIiZxHiqcVPMrvx_JKUbpkWItmXiEw2xnzDDq8gMKnsLNKCOXMLgG7T2/exec";
     const BUDGET_DATA = {
       "BALCONES RUITOQUE": { items: [{ nombre: "Mercado", monto: 2600000 }, { nombre: "Empleada doméstica (mes vencido)", monto: 2700000 }, { nombre: "Agua ( vence 13) descontado directamente de davivienda", monto: 330000 }, { nombre: "Energía (Vence 13)", monto: 270000 }, { nombre: "Gas (Vence 8)", monto: 120000 }, { nombre: "Internet  (Vence 25)", monto: 90000 }, { nombre: "Administración (Vence 18)", monto: 424500 }] },
       "COLEGIO": { items: [{ nombre: "Pensión Nico", monto: 1065600 }, { nombre: "Pensión Angel", monto: 1105600 }, { nombre: "Lonchera Nico", monto: 200000 }, { nombre: "Lonchera Ángel", monto: 200000 }, { nombre: "Imprevistos DEL COLEGIO (domicilio almuerzo)", monto: 400000 }] },
@@ -215,7 +189,6 @@
       "CRÉDITOS ORDINARIOS": { items: [{ nombre: "cuota March", monto: 1400000 }, { nombre: "Cuota scotibank colpatria 5 de cada mes.", monto: 410000 }, { nombre: "Davivienda complemento viaje Paris", monto: 1564000 }, { nombre: "Todoriesgo Koleos", monto: 455000 }, { nombre: "Seguro Vida Renault", monto: 170000 }, { nombre: "Crédito Colpatria", monto: 2325000 }] },
       "CRÉDITOS HIPOTECARIOS": { items: [{ nombre: "Hipoteca BBVA (Vence 01)", monto: 1584000 }] }
     };
-    
     function initCategories() { const select = document.getElementById('category'); Object.keys(BUDGET_DATA).forEach(cat => { const option = document.createElement('option'); option.value = cat; option.textContent = cat; select.appendChild(option); }); }
     function getCurrentMonthKey() { const today = new Date(); const year = today.getFullYear(); const month = String(today.getMonth() + 1).padStart(2, '0'); return `${year}_${month}`; }
     function generatePaymentId() { const now = new Date(); const timestamp = now.getTime().toString(36); const random = Math.random().toString(36).substring(2, 9); return `${timestamp}-${random}`; }
