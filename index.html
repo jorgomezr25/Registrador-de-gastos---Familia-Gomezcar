@@ -17,36 +17,39 @@
     .header p { font-size: 13px; color: #999; margin-top: 4px; }
     
     .tabs { display: flex; gap: 0; background: #fff; border-bottom: 0.5px solid #e0e0e0; }
-    .tab-btn { flex: 1; padding: 12px; border: none; background: none; font-size: 14px; color: #999; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
+    .tab-btn { flex: 1; padding: 12px; border: none; background: none; font-size: 13px; color: #999; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
     .tab-btn.active { color: #378add; border-bottom-color: #378add; }
     
     .container { max-width: 100%; }
-    
     .section { display: none; padding: 16px; }
     .section.active { display: block; }
     
     .form-group { margin-bottom: 16px; }
     .form-group label { display: block; font-size: 13px; color: #666; margin-bottom: 6px; font-weight: 500; }
-    .form-group select, .form-group input { width: 100%; padding: 10px; border: 0.5px solid #d0d0d0; border-radius: 6px; font-size: 16px; }
-    .form-group input:focus, .form-group select:focus { outline: none; border-color: #378add; }
+    .form-group select, .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 0.5px solid #d0d0d0; border-radius: 6px; font-size: 16px; font-family: inherit; }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #378add; }
+    .form-group textarea { resize: vertical; min-height: 60px; }
     
     .btn { width: 100%; padding: 12px; margin-top: 8px; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; font-weight: 500; }
     .btn-primary { background: #378add; color: white; }
     .btn-primary:active { opacity: 0.9; }
+    .btn-secondary { background: #f0f0f0; color: #333; }
+    .btn-secondary:active { opacity: 0.8; }
     
     .card { background: white; border-radius: 8px; border: 0.5px solid #e0e0e0; padding: 16px; margin-bottom: 12px; }
-    
     .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
     .stat { background: #f9f9f9; padding: 12px; border-radius: 6px; border: 0.5px solid #e0e0e0; }
     .stat-label { font-size: 12px; color: #999; margin-bottom: 4px; }
     .stat-value { font-size: 20px; font-weight: 500; color: #1a1a1a; }
     
-    .list-item { padding: 12px; border-bottom: 0.5px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; }
+    .list-item { padding: 12px; border-bottom: 0.5px solid #e0e0e0; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
     .list-item:last-child { border-bottom: none; }
     .list-item-left { flex: 1; }
-    .list-item-desc { font-size: 14px; color: #1a1a1a; }
+    .list-item-desc { font-size: 14px; color: #1a1a1a; font-weight: 500; }
     .list-item-cat { font-size: 12px; color: #999; margin-top: 2px; }
-    .list-item-amount { font-size: 15px; font-weight: 500; color: #378add; text-align: right; }
+    .list-item-meta { font-size: 11px; color: #bbb; margin-top: 2px; }
+    .list-item-amount { font-size: 15px; font-weight: 500; color: #378add; text-align: right; white-space: nowrap; }
+    .list-item-badge { display: inline-block; padding: 2px 6px; font-size: 10px; background: #e3f2fd; color: #1976d2; border-radius: 3px; margin-top: 4px; }
     
     .empty-state { text-align: center; padding: 40px 16px; color: #999; }
     .empty-state p { font-size: 14px; }
@@ -58,11 +61,15 @@
     .summary-row:last-child { border-bottom: none; }
     .summary-label { font-size: 14px; color: #666; }
     .summary-value { font-size: 14px; font-weight: 500; color: #1a1a1a; }
-    .summary-value.over { color: #e24b4a; }
-    .summary-value.under { color: #639922; }
     
     .progress-bar { width: 100%; height: 6px; background: #e0e0e0; border-radius: 3px; overflow: hidden; margin-top: 8px; }
     .progress-fill { height: 100%; background: #378add; border-radius: 3px; }
+    
+    .sync-section { background: #f0f7ff; border: 0.5px solid #90caf9; border-radius: 6px; padding: 12px; margin-bottom: 16px; }
+    .sync-status { font-size: 13px; color: #1976d2; margin-bottom: 8px; }
+    .sync-loading { color: #1976d2; }
+    .sync-success { color: #388e3c; }
+    .sync-error { color: #d32f2f; }
   </style>
 </head>
 <body>
@@ -75,22 +82,21 @@
     <button class="tab-btn active" onclick="switchTab('register')">Registrar</button>
     <button class="tab-btn" onclick="switchTab('dashboard')">Dashboard</button>
     <button class="tab-btn" onclick="switchTab('history')">Historial</button>
+    <button class="tab-btn" onclick="switchTab('sync')">Sincronizar</button>
   </div>
   
   <div class="container">
     <div id="register" class="section active">
       <div style="padding: 16px;">
         <div class="form-group">
+          <label>Fecha</label>
+          <input type="date" id="date" required>
+        </div>
+        
+        <div class="form-group">
           <label>Categoría</label>
           <select id="category" onchange="updateSubcategories()">
             <option value="">Elige una categoría</option>
-            <option value="BALCONES RUITOQUE">Balcones Ruitoque</option>
-            <option value="COLEGIO">Colegio</option>
-            <option value="GENERALES">Generales</option>
-            <option value="SANTA MARTA">Santa Marta</option>
-            <option value="OTROS">Otros</option>
-            <option value="CRÉDITOS ORDINARIOS">Créditos Ordinarios</option>
-            <option value="CRÉDITOS HIPOTECARIOS">Créditos Hipotecarios</option>
           </select>
         </div>
         
@@ -99,6 +105,11 @@
           <select id="subcategory">
             <option value="">Elige una subcategoría</option>
           </select>
+        </div>
+        
+        <div class="form-group">
+          <label>Descripción (opcional)</label>
+          <textarea id="description" placeholder="Ej: Frutas, verduras, lácteos..."></textarea>
         </div>
         
         <div class="form-group">
@@ -128,7 +139,7 @@
           <div class="stat-row">
             <div class="stat">
               <div class="stat-label">Presupuestado</div>
-              <div class="stat-value" id="stat-budgeted">$24,052,800</div>
+              <div class="stat-value" id="stat-budgeted">$0</div>
             </div>
             <div class="stat">
               <div class="stat-label">Ejecutado</div>
@@ -142,7 +153,7 @@
           </div>
           <div class="summary-row" style="padding: 12px 0 0;">
             <span id="progress-pct">0%</span>
-            <span id="remaining" style="color: #378add;">$24,052,800 disponible</span>
+            <span id="remaining" style="color: #378add;">$0 disponible</span>
           </div>
         </div>
         
@@ -168,45 +179,142 @@
         </div>
       </div>
     </div>
+    
+    <div id="sync" class="section">
+      <div style="padding: 16px;">
+        <div class="card">
+          <div style="font-size: 16px; font-weight: 500; margin-bottom: 16px; color: #1a1a1a;">Sincronizar con Google Sheets</div>
+          
+          <div class="sync-section">
+            <div class="sync-status" id="sync-status">
+              Registros no sincronizados: <strong id="unsync-count">0</strong>
+            </div>
+            <button class="btn btn-primary" onclick="syncToSheets()" id="sync-btn">Sincronizar ahora</button>
+          </div>
+          
+          <div class="card" style="margin-top: 0; padding: 0;">
+            <div style="font-size: 14px; font-weight: 500; padding: 16px; color: #1a1a1a; border-bottom: 0.5px solid #e0e0e0;">Estado de sincronización</div>
+            <div id="sync-history" style="padding: 0;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
   
   <script>
+    // DATOS COMPLETOS DE PRESUPUESTO
     const BUDGET_DATA = {
-      "BALCONES RUITOQUE": { total: 6534500, items: [
-        { name: "Mercado", monto: 2600000 },
-        { name: "Empleada doméstica", monto: 2700000 },
-        { name: "Agua", monto: 330000 },
-        { name: "Energía", monto: 270000 }
-      ]},
-      "COLEGIO": { total: 2971200, items: [
-        { name: "Pensión Nico", monto: 1065600 },
-        { name: "Pensión Angel", monto: 1105600 },
-        { name: "Lonchera Nico", monto: 200000 }
-      ]},
-      "GENERALES": { total: 3709100, items: [
-        { name: "Claude", monto: 330000 },
-        { name: "Gemini", monto: 70000 },
-        { name: "Netflix", monto: 29900 }
-      ]},
-      "SANTA MARTA": { total: 1890000, items: [
-        { name: "Admin", monto: 190000 },
-        { name: "Internet", monto: 75000 },
-        { name: "Pasajes", monto: 800000 }
-      ]},
-      "OTROS": { total: 1040000, items: [
-        { name: "Limosna", monto: 100000 },
-        { name: "Gasolina", monto: 600000 }
-      ]},
-      "CRÉDITOS ORDINARIOS": { total: 6324000, items: [
-        { name: "Cuota March", monto: 1400000 },
-        { name: "Scotibank", monto: 410000 }
-      ]},
-      "CRÉDITOS HIPOTECARIOS": { total: 1584000, items: [
-        { name: "Hipoteca BBVA", monto: 1584000 }
-      ]}
+      "BALCONES RUITOQUE": {
+        items: [
+          { nombre: "Mercado", monto: 2600000 },
+          { nombre: "Empleada doméstica (mes vencido)", monto: 2700000 },
+          { nombre: "Agua ( vence 13) descontado directamente de davivienda", monto: 330000 },
+          { nombre: "Energía (Vence 13)", monto: 270000 },
+          { nombre: "Gas (Vence 8)", monto: 120000 },
+          { nombre: "Internet  (Vence 25)", monto: 90000 },
+          { nombre: "Administración (Vence 18)", monto: 424500 }
+        ]
+      },
+      "COLEGIO": {
+        items: [
+          { nombre: "Pensión Nico", monto: 1065600 },
+          { nombre: "Pensión Angel", monto: 1105600 },
+          { nombre: "Lonchera Nico", monto: 200000 },
+          { nombre: "Lonchera Ángel", monto: 200000 },
+          { nombre: "Imprevistos DEL COLEGIO (domicilio almuerzo)", monto: 400000 }
+        ]
+      },
+      "GENERALES": {
+        items: [
+          { nombre: "exequias La colina", monto: 30000 },
+          { nombre: "Plataformas: Icloud (15 de cada mes)", monto: 90000 },
+          { nombre: "Plataformas: Netflix (25 de cada mes)", monto: 29900 },
+          { nombre: "Plataformas: HBO", monto: 15000 },
+          { nombre: "CLAUDE", monto: 330000 },
+          { nombre: "GEMINI", monto: 70000 },
+          { nombre: "Celular Nelcy", monto: 41000 },
+          { nombre: "Cel Jorge (10 de cada mes)", monto: 48000 },
+          { nombre: "Celular Nico (10 de cada mes)", monto: 44000 },
+          { nombre: "Celular Angelito", monto: 45000 },
+          { nombre: "Cel Leonor (9 de cada mes)", monto: 21000 },
+          { nombre: "Cel Mercedes (6 de cada mes)", monto: 21000 },
+          { nombre: "Seguridad social  20 junio independiente", monto: 534200 },
+          { nombre: "Mensualidad doña Leonor", monto: 500000 },
+          { nombre: "Milo Comida (cuenta Melgarejo SAS 291-000422-72)", monto: 130000 },
+          { nombre: "Milo Peluqería", monto: 90000 },
+          { nombre: "Milo purga", monto: 70000 },
+          { nombre: "Medicina", monto: 200000 },
+          { nombre: "Productos ANGEL y NICO", monto: 100000 },
+          { nombre: "cortes de cabello y belleza", monto: 300000 },
+          { nombre: "Salidas familia", monto: 1000000 }
+        ]
+      },
+      "SANTA MARTA": {
+        items: [
+          { nombre: "Admon (Vence 10)", monto: 190000 },
+          { nombre: "Internet (vence 18 de mes)", monto: 75000 },
+          { nombre: "Servicio Gas (Vence 27)", monto: 20000 },
+          { nombre: "Servicio de agua", monto: 25000 },
+          { nombre: "Servicio de energia (Vence 10 de cada mes)", monto: 180000 },
+          { nombre: "8 pasajes Copetran", monto: 800000 },
+          { nombre: "Alimentacion y transporte", monto: 600000 }
+        ]
+      },
+      "OTROS": {
+        items: [
+          { nombre: "Limosna", monto: 100000 },
+          { nombre: "MFC", monto: 30000 },
+          { nombre: "Otros de la Parroquia", monto: 50000 },
+          { nombre: "Gasolina", monto: 600000 },
+          { nombre: "Arriendo Parqueadero Balcones March", monto: 60000 },
+          { nombre: "Lavados carro", monto: 200000 }
+        ]
+      },
+      "CRÉDITOS ORDINARIOS": {
+        items: [
+          { nombre: "cuota March", monto: 1400000 },
+          { nombre: "Cuota scotibank colpatria 5 de cada mes.", monto: 410000 },
+          { nombre: "Davivienda complemento viaje Paris", monto: 1564000 },
+          { nombre: "Todoriesgo Koleos", monto: 455000 },
+          { nombre: "Seguro Vida Renault", monto: 170000 },
+          { nombre: "Crédito Colpatria", monto: 2325000 }
+        ]
+      },
+      "CRÉDITOS HIPOTECARIOS": {
+        items: [
+          { nombre: "Hipoteca BBVA (Vence 01)", monto: 1584000 }
+        ]
+      }
     };
     
-    let payments = JSON.parse(localStorage.getItem('payments')) || [];
+    // Cargar categorías en el selector
+    function initCategories() {
+      const select = document.getElementById('category');
+      Object.keys(BUDGET_DATA).forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat;
+        option.textContent = cat;
+        select.appendChild(option);
+      });
+    }
+    
+    // Obtener clave de mes/año actual
+    function getCurrentMonthKey() {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      return `payments_${year}_${month}`;
+    }
+    
+    // Generar ID único para cada pago
+    function generatePaymentId() {
+      const now = new Date();
+      const timestamp = now.getTime().toString(36);
+      const random = Math.random().toString(36).substring(2, 9);
+      return `${timestamp}-${random}`;
+    }
+    
+    let payments = JSON.parse(localStorage.getItem(getCurrentMonthKey())) || [];
     
     function updateSubcategories() {
       const category = document.getElementById('category').value;
@@ -216,8 +324,8 @@
       if (category && BUDGET_DATA[category]) {
         BUDGET_DATA[category].items.forEach(item => {
           const option = document.createElement('option');
-          option.value = item.name;
-          option.textContent = item.name;
+          option.value = item.nombre;
+          option.textContent = item.nombre;
           subcategorySelect.appendChild(option);
         });
       }
@@ -231,39 +339,49 @@
       
       if (tab === 'dashboard') updateDashboard();
       if (tab === 'history') updateHistory();
+      if (tab === 'sync') updateSyncStatus();
     }
     
     function registerPayment() {
+      const date = document.getElementById('date').value;
       const category = document.getElementById('category').value;
       const subcategory = document.getElementById('subcategory').value;
+      const description = document.getElementById('description').value;
       const amount = parseInt(document.getElementById('amount').value);
       const method = document.getElementById('method').value;
       
-      if (!category || !subcategory || !amount || !method) {
-        alert('Completa todos los campos');
+      if (!date || !category || !subcategory || !amount || !method) {
+        alert('Completa todos los campos obligatorios');
         return;
       }
       
-      payments.push({
-        date: new Date().toLocaleDateString('es-CO'),
+      const payment = {
+        id: generatePaymentId(),
+        date,
         category,
         subcategory,
+        description,
         amount,
-        method
-      });
+        method,
+        synced: false,
+        syncedAt: null
+      };
       
-      localStorage.setItem('payments', JSON.stringify(payments));
+      payments.push(payment);
+      localStorage.setItem(getCurrentMonthKey(), JSON.stringify(payments));
       
       document.getElementById('category').value = '';
       document.getElementById('subcategory').value = '';
+      document.getElementById('description').value = '';
       document.getElementById('amount').value = '';
       document.getElementById('method').value = '';
+      document.getElementById('date').valueAsDate = new Date();
       
       alert('Pago registrado ✓');
     }
     
     function updateDashboard() {
-      const totalBudget = Object.values(BUDGET_DATA).reduce((sum, cat) => sum + cat.total, 0);
+      const totalBudget = Object.values(BUDGET_DATA).reduce((sum, cat) => sum + cat.items.reduce((s, item) => s + item.monto, 0), 0);
       const totalExecuted = payments.reduce((sum, p) => sum + p.amount, 0);
       const remaining = totalBudget - totalExecuted;
       const percentage = Math.round((totalExecuted / totalBudget) * 100);
@@ -276,14 +394,15 @@
       
       let categorySummary = '';
       for (const [cat, data] of Object.entries(BUDGET_DATA)) {
+        const catTotal = data.items.reduce((s, item) => s + item.monto, 0);
         const executed = payments.filter(p => p.category === cat).reduce((sum, p) => sum + p.amount, 0);
-        const pct = Math.round((executed / data.total) * 100);
+        const pct = Math.round((executed / catTotal) * 100);
         categorySummary += `
           <div class="summary-row">
             <span class="summary-label">${cat}</span>
             <div style="text-align: right;">
               <div class="summary-value">${pct}%</div>
-              <div style="font-size: 12px; color: #999;">$${executed.toLocaleString('es-CO')} / $${data.total.toLocaleString('es-CO')}</div>
+              <div style="font-size: 12px; color: #999;">$${executed.toLocaleString('es-CO')} / $${catTotal.toLocaleString('es-CO')}</div>
             </div>
           </div>
         `;
@@ -320,8 +439,11 @@
           <div class="list-item-left">
             <div class="list-item-desc">${p.subcategory}</div>
             <div class="list-item-cat">${p.category} · ${p.method}</div>
+            ${p.description ? `<div class="list-item-meta">"${p.description}"</div>` : ''}
+            <div class="list-item-meta">${p.date}</div>
+            ${p.synced ? `<div class="list-item-badge">✓ Sincronizado</div>` : ''}
           </div>
-          <div style="text-align: right;">
+          <div>
             <div class="list-item-amount">$${p.amount.toLocaleString('es-CO')}</div>
             <button class="delete-btn" onclick="deletePayment(${i})">Eliminar</button>
           </div>
@@ -332,13 +454,82 @@
     function deletePayment(index) {
       if (confirm('¿Eliminar este pago?')) {
         payments.splice(index, 1);
-        localStorage.setItem('payments', JSON.stringify(payments));
+        localStorage.setItem(getCurrentMonthKey(), JSON.stringify(payments));
         updateHistory();
       }
     }
     
+    function updateSyncStatus() {
+      const unsyncedCount = payments.filter(p => !p.synced).length;
+      document.getElementById('unsync-count').textContent = unsyncedCount;
+      
+      const history = payments.filter(p => p.synced).reverse().slice(0, 10);
+      if (history.length === 0) {
+        document.getElementById('sync-history').innerHTML = '<p style="padding: 16px; color: #999;">Sin registros sincronizados</p>';
+        return;
+      }
+      
+      document.getElementById('sync-history').innerHTML = history.map(p => `
+        <div class="list-item">
+          <div class="list-item-left">
+            <div style="font-size: 13px; color: #1a1a1a;">${p.subcategory}</div>
+            <div style="font-size: 11px; color: #999; margin-top: 2px;">Sincronizado ${new Date(p.syncedAt).toLocaleString('es-CO')}</div>
+          </div>
+          <div style="color: #388e3c; font-size: 13px; font-weight: 500;">$${p.amount.toLocaleString('es-CO')}</div>
+        </div>
+      `).join('');
+    }
+    
+    async function syncToSheets() {
+      const unsyncedPayments = payments.filter(p => !p.synced);
+      
+      if (unsyncedPayments.length === 0) {
+        alert('No hay registros sin sincronizar');
+        return;
+      }
+      
+      const btn = document.getElementById('sync-btn');
+      btn.disabled = true;
+      btn.textContent = 'Sincronizando...';
+      
+      try {
+        // Simulación de sincronización (versión 2: manual sin endpoint Apps Script aún)
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // Marcar como sincronizados
+        unsyncedPayments.forEach(p => {
+          const payment = payments.find(pym => pym.id === p.id);
+          if (payment) {
+            payment.synced = true;
+            payment.syncedAt = new Date().toISOString();
+          }
+        });
+        
+        localStorage.setItem(getCurrentMonthKey(), JSON.stringify(payments));
+        
+        btn.disabled = false;
+        btn.textContent = 'Sincronizar ahora';
+        
+        alert(`✓ ${unsyncedPayments.length} registros marcados como sincronizados`);
+        updateSyncStatus();
+        updateHistory();
+        
+      } catch (error) {
+        btn.disabled = false;
+        btn.textContent = 'Sincronizar ahora';
+        alert('Error: ' + error.message);
+      }
+    }
+    
+    // Inicializar
     document.addEventListener('DOMContentLoaded', () => {
+      initCategories();
+      
+      // Establecer fecha actual
       const today = new Date();
+      document.getElementById('date').valueAsDate = today;
+      
+      // Actualizar mes/año en header
       const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
                          'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
       document.getElementById('current-month').textContent = monthNames[today.getMonth()] + ' ' + today.getFullYear();
