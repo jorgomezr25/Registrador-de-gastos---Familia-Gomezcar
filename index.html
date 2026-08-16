@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="Registrador de gastos - Familia Gomezcar">
+  <title>Presupuesto Familia</title>
+  <link rel="manifest" href="data:application/manifest+json,%7B%22name%22:%22Presupuesto%20Familia%22,%22short_name%22:%22Presupuesto%22,%22start_url%22:%22.%22,%22scope%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%23ffffff%22,%22theme_color%22:%22%23ffffff%22,%22icons%22:%5B%5D%7D">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f5f5f5; }
+    body { padding-bottom: 20px; }
+    
+    .header { background: #fff; border-bottom: 0.5px solid #e0e0e0; padding: 16px; text-align: center; position: sticky; top: 0; z-index: 10; }
+    .header h1 { font-size: 18px; color: #1a1a1a; font-weight: 500; }
+    .header p { font-size: 13px; color: #999; margin-top: 4px; }
+    
+    .tabs { display: flex; gap: 0; background: #fff; border-bottom: 0.5px solid #e0e0e0; }
+    .tab-btn { flex: 1; padding: 12px; border: none; background: none; font-size: 14px; color: #999; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
+    .tab-btn.active { color: #378add; border-bottom-color: #378add; }
+    
+    .container { max-width: 100%; }
+    
+    .section { display: none; padding: 16px; }
+    .section.active { display: block; }
+    
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 13px; color: #666; margin-bottom: 6px; font-weight: 500; }
+    .form-group select, .form-group input { width: 100%; padding: 10px; border: 0.5px solid #d0d0d0; border-radius: 6px; font-size: 16px; }
+    .form-group input:focus, .form-group select:focus { outline: none; border-color: #378add; }
+    
+    .btn { width: 100%; padding: 12px; margin-top: 8px; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; font-weight: 500; }
+    .btn-primary { background: #378add; color: white; }
+    .btn-primary:active { opacity: 0.9; }
+    
+    .card { background: white; border-radius: 8px; border: 0.5px solid #e0e0e0; padding: 16px; margin-bottom: 12px; }
+    
+    .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    .stat { background: #f9f9f9; padding: 12px; border-radius: 6px; border: 0.5px solid #e0e0e0; }
+    .stat-label { font-size: 12px; color: #999; margin-bottom: 4px; }
+    .stat-value { font-size: 20px; font-weight: 500; color: #1a1a1a; }
+    
+    .list-item { padding: 12px; border-bottom: 0.5px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; }
+    .list-item:last-child { border-bottom: none; }
+    .list-item-left { flex: 1; }
+    .list-item-desc { font-size: 14px; color: #1a1a1a; }
+    .list-item-cat { font-size: 12px; color: #999; margin-top: 2px; }
+    .list-item-amount { font-size: 15px; font-weight: 500; color: #378add; text-align: right; }
+    
+    .empty-state { text-align: center; padding: 40px 16px; color: #999; }
+    .empty-state p { font-size: 14px; }
+    
+    .delete-btn { background: #f5f5f5; border: none; color: #999; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+    .delete-btn:active { background: #e0e0e0; }
+    
+    .summary-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 0.5px solid #e0e0e0; }
+    .summary-row:last-child { border-bottom: none; }
+    .summary-label { font-size: 14px; color: #666; }
+    .summary-value { font-size: 14px; font-weight: 500; color: #1a1a1a; }
+    .summary-value.over { color: #e24b4a; }
+    .summary-value.under { color: #639922; }
+    
+    .progress-bar { width: 100%; height: 6px; background: #e0e0e0; border-radius: 3px; overflow: hidden; margin-top: 8px; }
+    .progress-fill { height: 100%; background: #378add; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Presupuesto Familia</h1>
+    <p id="current-month">Septiembre 2026</p>
+  </div>
+  
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('register')">Registrar</button>
+    <button class="tab-btn" onclick="switchTab('dashboard')">Dashboard</button>
+    <button class="tab-btn" onclick="switchTab('history')">Historial</button>
+  </div>
+  
+  <div class="container">
+    <div id="register" class="section active">
+      <div style="padding: 16px;">
+        <div class="form-group">
+          <label>Categoría</label>
+          <select id="category" onchange="updateSubcategories()">
+            <option value="">Elige una categoría</option>
+            <option value="BALCONES RUITOQUE">Balcones Ruitoque</option>
+            <option value="COLEGIO">Colegio</option>
+            <option value="GENERALES">Generales</option>
+            <option value="SANTA MARTA">Santa Marta</option>
+            <option value="OTROS">Otros</option>
+            <option value="CRÉDITOS ORDINARIOS">Créditos Ordinarios</option>
+            <option value="CRÉDITOS HIPOTECARIOS">Créditos Hipotecarios</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>Subcategoría</label>
+          <select id="subcategory">
+            <option value="">Elige una subcategoría</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>Monto ($)</label>
+          <input type="number" id="amount" placeholder="0" min="0">
+        </div>
+        
+        <div class="form-group">
+          <label>Medio de pago</label>
+          <select id="method">
+            <option value="">Elige un medio</option>
+            <option value="Davivienda efectivo">Davivienda efectivo</option>
+            <option value="Bancolombia efectivo">Bancolombia efectivo</option>
+            <option value="Tarjeta Davivienda">Tarjeta Davivienda</option>
+            <option value="Tarjeta Falabella Nelcy">Tarjeta Falabella Nelcy</option>
+            <option value="Tarjeta Falabella Jorge">Tarjeta Falabella Jorge</option>
+          </select>
+        </div>
+        
+        <button class="btn btn-primary" onclick="registerPayment()">Registrar pago</button>
+      </div>
+    </div>
+    
+    <div id="dashboard" class="section">
+      <div style="padding: 16px;">
+        <div class="card">
+          <div class="stat-row">
+            <div class="stat">
+              <div class="stat-label">Presupuestado</div>
+              <div class="stat-value" id="stat-budgeted">$24,052,800</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Ejecutado</div>
+              <div class="stat-value" id="stat-executed">$0</div>
+            </div>
+          </div>
+          
+          <div class="summary-label" style="font-size: 12px; color: #999; margin-top: 12px;">Avance</div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+          </div>
+          <div class="summary-row" style="padding: 12px 0 0;">
+            <span id="progress-pct">0%</span>
+            <span id="remaining" style="color: #378add;">$24,052,800 disponible</span>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div style="font-size: 14px; font-weight: 500; margin-bottom: 12px; color: #1a1a1a;">Por categoría</div>
+          <div id="category-summary"></div>
+        </div>
+        
+        <div class="card">
+          <div style="font-size: 14px; font-weight: 500; margin-bottom: 12px; color: #1a1a1a;">Por medio de pago</div>
+          <div id="method-summary"></div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="history" class="section">
+      <div style="padding: 16px;">
+        <div class="card">
+          <div id="payment-list"></div>
+          <div id="empty-message" class="empty-state">
+            <p>Ningún pago registrado aún</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    const BUDGET_DATA = {
+      "BALCONES RUITOQUE": { total: 6534500, items: [
+        { name: "Mercado", monto: 2600000 },
+        { name: "Empleada doméstica", monto: 2700000 },
+        { name: "Agua", monto: 330000 },
+        { name: "Energía", monto: 270000 }
+      ]},
+      "COLEGIO": { total: 2971200, items: [
+        { name: "Pensión Nico", monto: 1065600 },
+        { name: "Pensión Angel", monto: 1105600 },
+        { name: "Lonchera Nico", monto: 200000 }
+      ]},
+      "GENERALES": { total: 3709100, items: [
+        { name: "Claude", monto: 330000 },
+        { name: "Gemini", monto: 70000 },
+        { name: "Netflix", monto: 29900 }
+      ]},
+      "SANTA MARTA": { total: 1890000, items: [
+        { name: "Admin", monto: 190000 },
+        { name: "Internet", monto: 75000 },
+        { name: "Pasajes", monto: 800000 }
+      ]},
+      "OTROS": { total: 1040000, items: [
+        { name: "Limosna", monto: 100000 },
+        { name: "Gasolina", monto: 600000 }
+      ]},
+      "CRÉDITOS ORDINARIOS": { total: 6324000, items: [
+        { name: "Cuota March", monto: 1400000 },
+        { name: "Scotibank", monto: 410000 }
+      ]},
+      "CRÉDITOS HIPOTECARIOS": { total: 1584000, items: [
+        { name: "Hipoteca BBVA", monto: 1584000 }
+      ]}
+    };
+    
+    let payments = JSON.parse(localStorage.getItem('payments')) || [];
+    
+    function updateSubcategories() {
+      const category = document.getElementById('category').value;
+      const subcategorySelect = document.getElementById('subcategory');
+      subcategorySelect.innerHTML = '<option value="">Elige una subcategoría</option>';
+      
+      if (category && BUDGET_DATA[category]) {
+        BUDGET_DATA[category].items.forEach(item => {
+          const option = document.createElement('option');
+          option.value = item.name;
+          option.textContent = item.name;
+          subcategorySelect.appendChild(option);
+        });
+      }
+    }
+    
+    function switchTab(tab) {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById(tab).classList.add('active');
+      event.target.classList.add('active');
+      
+      if (tab === 'dashboard') updateDashboard();
+      if (tab === 'history') updateHistory();
+    }
+    
+    function registerPayment() {
+      const category = document.getElementById('category').value;
+      const subcategory = document.getElementById('subcategory').value;
+      const amount = parseInt(document.getElementById('amount').value);
+      const method = document.getElementById('method').value;
+      
+      if (!category || !subcategory || !amount || !method) {
+        alert('Completa todos los campos');
+        return;
+      }
+      
+      payments.push({
+        date: new Date().toLocaleDateString('es-CO'),
+        category,
+        subcategory,
+        amount,
+        method
+      });
+      
+      localStorage.setItem('payments', JSON.stringify(payments));
+      
+      document.getElementById('category').value = '';
+      document.getElementById('subcategory').value = '';
+      document.getElementById('amount').value = '';
+      document.getElementById('method').value = '';
+      
+      alert('Pago registrado ✓');
+    }
+    
+    function updateDashboard() {
+      const totalBudget = Object.values(BUDGET_DATA).reduce((sum, cat) => sum + cat.total, 0);
+      const totalExecuted = payments.reduce((sum, p) => sum + p.amount, 0);
+      const remaining = totalBudget - totalExecuted;
+      const percentage = Math.round((totalExecuted / totalBudget) * 100);
+      
+      document.getElementById('stat-budgeted').textContent = '$' + totalBudget.toLocaleString('es-CO');
+      document.getElementById('stat-executed').textContent = '$' + totalExecuted.toLocaleString('es-CO');
+      document.getElementById('progress-fill').style.width = percentage + '%';
+      document.getElementById('progress-pct').textContent = percentage + '%';
+      document.getElementById('remaining').textContent = '$' + remaining.toLocaleString('es-CO') + ' disponible';
+      
+      let categorySummary = '';
+      for (const [cat, data] of Object.entries(BUDGET_DATA)) {
+        const executed = payments.filter(p => p.category === cat).reduce((sum, p) => sum + p.amount, 0);
+        const pct = Math.round((executed / data.total) * 100);
+        categorySummary += `
+          <div class="summary-row">
+            <span class="summary-label">${cat}</span>
+            <div style="text-align: right;">
+              <div class="summary-value">${pct}%</div>
+              <div style="font-size: 12px; color: #999;">$${executed.toLocaleString('es-CO')} / $${data.total.toLocaleString('es-CO')}</div>
+            </div>
+          </div>
+        `;
+      }
+      document.getElementById('category-summary').innerHTML = categorySummary;
+      
+      let methodSummary = '';
+      const methods = new Set(payments.map(p => p.method));
+      methods.forEach(method => {
+        const methodTotal = payments.filter(p => p.method === method).reduce((sum, p) => sum + p.amount, 0);
+        methodSummary += `
+          <div class="summary-row">
+            <span class="summary-label">${method}</span>
+            <span class="summary-value">$${methodTotal.toLocaleString('es-CO')}</span>
+          </div>
+        `;
+      });
+      document.getElementById('method-summary').innerHTML = methodSummary || '<p style="color: #999; font-size: 14px;">Sin pagos registrados</p>';
+    }
+    
+    function updateHistory() {
+      const list = document.getElementById('payment-list');
+      const empty = document.getElementById('empty-message');
+      
+      if (payments.length === 0) {
+        list.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+      
+      empty.style.display = 'none';
+      list.innerHTML = payments.map((p, i) => `
+        <div class="list-item">
+          <div class="list-item-left">
+            <div class="list-item-desc">${p.subcategory}</div>
+            <div class="list-item-cat">${p.category} · ${p.method}</div>
+          </div>
+          <div style="text-align: right;">
+            <div class="list-item-amount">$${p.amount.toLocaleString('es-CO')}</div>
+            <button class="delete-btn" onclick="deletePayment(${i})">Eliminar</button>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    function deletePayment(index) {
+      if (confirm('¿Eliminar este pago?')) {
+        payments.splice(index, 1);
+        localStorage.setItem('payments', JSON.stringify(payments));
+        updateHistory();
+      }
+    }
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      const today = new Date();
+      const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                         'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+      document.getElementById('current-month').textContent = monthNames[today.getMonth()] + ' ' + today.getFullYear();
+    });
+    
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('data:application/javascript,self.addEventListener("install",e=>self.skipWaiting());self.addEventListener("activate",e=>e.waitUntil(clients.claim()));');
+    }
+  </script>
+</body>
+</html>
