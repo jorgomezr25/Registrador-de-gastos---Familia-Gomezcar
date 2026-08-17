@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#ffffff">
   <meta name="description" content="Registrador de gastos - Familia Gomezcar">
   <title>Presupuesto Familia</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f5f5f5; }
@@ -28,6 +29,8 @@
     .btn-primary { background: #378add; color: white; }
     .btn-primary:active { opacity: 0.9; }
     .btn-primary:disabled { background: #ccc; cursor: not-allowed; }
+    .btn-secondary { background: #f0f0f0; color: #333; }
+    .btn-secondary:active { opacity: 0.8; }
     .card { background: white; border-radius: 8px; border: 0.5px solid #e0e0e0; padding: 16px; margin-bottom: 12px; }
     .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
     .stat { background: #f9f9f9; padding: 12px; border-radius: 6px; border: 0.5px solid #e0e0e0; }
@@ -68,7 +71,7 @@
     <button class="tab-btn active" onclick="switchTab('register')">Registrar</button>
     <button class="tab-btn" onclick="switchTab('dashboard')">Dashboard</button>
     <button class="tab-btn" onclick="switchTab('history')">Historial</button>
-    <button class="tab-btn" onclick="switchTab('sync')">Sincronizar</button>
+    <button class="tab-btn" onclick="switchTab('export')">Descargar</button>
   </div>
   
   <div class="container">
@@ -157,20 +160,24 @@
       </div>
     </div>
     
-    <div id="sync" class="section">
+    <div id="export" class="section">
       <div style="padding: 16px;">
         <div class="card">
-          <div style="font-size: 16px; font-weight: 500; margin-bottom: 16px; color: #1a1a1a;">Sincronizar con Google Sheets</div>
-          <div id="sync-alert"></div>
+          <div style="font-size: 16px; font-weight: 500; margin-bottom: 16px; color: #1a1a1a;">Descargar registros</div>
           <div class="sync-section">
-            <div class="sync-status" id="sync-status">
-              Registros no sincronizados: <strong id="unsync-count">0</strong>
+            <div class="sync-status">
+              Registros en este mes: <strong id="export-count">0</strong>
             </div>
-            <button class="btn btn-primary" onclick="syncToSheets()" id="sync-btn">Sincronizar ahora</button>
+            <button class="btn btn-primary" onclick="downloadExcel()">📊 Descargar como Excel</button>
           </div>
-          <div class="card" style="margin-top: 0; padding: 0;">
-            <div style="font-size: 14px; font-weight: 500; padding: 16px; color: #1a1a1a; border-bottom: 0.5px solid #e0e0e0;">Estado de sincronización</div>
-            <div id="sync-history" style="padding: 0;"></div>
+          <div class="card" style="margin-top: 0; padding: 12px; background: #f9f9f9;">
+            <div style="font-size: 13px; color: #666; line-height: 1.6;">
+              <strong>Cómo usar:</strong><br>
+              1. Clickea "Descargar como Excel"<br>
+              2. Se descargará un archivo .xlsx<br>
+              3. Abre en Google Sheets (Archivo → Abrir → Sube el archivo)<br>
+              4. ¡Listo! Tienes todos tus registros en Sheets
+            </div>
           </div>
         </div>
       </div>
@@ -178,8 +185,6 @@
   </div>
   
   <script>
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbymTSoF2HOxLP3p9a3gXToDaQ3yHTOEYCRfIBztr00sDgfwpvu3AZIfDBQKY0GIwluh/exec";
-    
     const BUDGET_DATA = {
       "BALCONES RUITOQUE": { items: [{ nombre: "Mercado", monto: 2600000 }, { nombre: "Empleada doméstica (mes vencido)", monto: 2700000 }, { nombre: "Agua ( vence 13) descontado directamente de davivienda", monto: 330000 }, { nombre: "Energía (Vence 13)", monto: 270000 }, { nombre: "Gas (Vence 8)", monto: 120000 }, { nombre: "Internet  (Vence 25)", monto: 90000 }, { nombre: "Administración (Vence 18)", monto: 424500 }] },
       "COLEGIO": { items: [{ nombre: "Pensión Nico", monto: 1065600 }, { nombre: "Pensión Angel", monto: 1105600 }, { nombre: "Lonchera Nico", monto: 200000 }, { nombre: "Lonchera Ángel", monto: 200000 }, { nombre: "Imprevistos DEL COLEGIO (domicilio almuerzo)", monto: 400000 }] },
@@ -195,16 +200,14 @@
     function generatePaymentId() { const now = new Date(); const timestamp = now.getTime().toString(36); const random = Math.random().toString(36).substring(2, 9); return `${timestamp}-${random}`; }
     let payments = JSON.parse(localStorage.getItem(`payments_${getCurrentMonthKey()}`)) || [];
     function updateSubcategories() { const category = document.getElementById('category').value; const subcategorySelect = document.getElementById('subcategory'); subcategorySelect.innerHTML = '<option value="">Elige una subcategoría</option>'; if (category && BUDGET_DATA[category]) { BUDGET_DATA[category].items.forEach(item => { const option = document.createElement('option'); option.value = item.nombre; option.textContent = item.nombre; subcategorySelect.appendChild(option); }); } }
-    function switchTab(tab) { document.querySelectorAll('.section').forEach(s => s.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.getElementById(tab).classList.add('active'); event.target.classList.add('active'); if (tab === 'dashboard') updateDashboard(); if (tab === 'history') updateHistory(); if (tab === 'sync') updateSyncStatus(); }
-    function registerPayment() { const date = document.getElementById('date').value; const category = document.getElementById('category').value; const subcategory = document.getElementById('subcategory').value; const description = document.getElementById('description').value; const amount = parseInt(document.getElementById('amount').value); const method = document.getElementById('method').value; if (!date || !category || !subcategory || !amount || !method) { alert('Completa todos los campos obligatorios'); return; } const payment = { id: generatePaymentId(), date, category, subcategory, description, amount, method, synced: false, syncedAt: null }; payments.push(payment); localStorage.setItem(`payments_${getCurrentMonthKey()}`, JSON.stringify(payments)); document.getElementById('category').value = ''; document.getElementById('subcategory').value = ''; document.getElementById('description').value = ''; document.getElementById('amount').value = ''; document.getElementById('method').value = ''; document.getElementById('date').valueAsDate = new Date(); alert('Pago registrado ✓'); }
+    function switchTab(tab) { document.querySelectorAll('.section').forEach(s => s.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.getElementById(tab).classList.add('active'); event.target.classList.add('active'); if (tab === 'dashboard') updateDashboard(); if (tab === 'history') updateHistory(); if (tab === 'export') updateExportStatus(); }
+    function registerPayment() { const date = document.getElementById('date').value; const category = document.getElementById('category').value; const subcategory = document.getElementById('subcategory').value; const description = document.getElementById('description').value; const amount = parseInt(document.getElementById('amount').value); const method = document.getElementById('method').value; if (!date || !category || !subcategory || !amount || !method) { alert('Completa todos los campos obligatorios'); return; } const payment = { id: generatePaymentId(), date, category, subcategory, description, amount, method }; payments.push(payment); localStorage.setItem(`payments_${getCurrentMonthKey()}`, JSON.stringify(payments)); document.getElementById('category').value = ''; document.getElementById('subcategory').value = ''; document.getElementById('description').value = ''; document.getElementById('amount').value = ''; document.getElementById('method').value = ''; document.getElementById('date').valueAsDate = new Date(); alert('Pago registrado ✓'); }
     function updateDashboard() { const totalBudget = Object.values(BUDGET_DATA).reduce((sum, cat) => sum + cat.items.reduce((s, item) => s + item.monto, 0), 0); const totalExecuted = payments.reduce((sum, p) => sum + p.amount, 0); const remaining = totalBudget - totalExecuted; const percentage = Math.round((totalExecuted / totalBudget) * 100); document.getElementById('stat-budgeted').textContent = '$' + totalBudget.toLocaleString('es-CO'); document.getElementById('stat-executed').textContent = '$' + totalExecuted.toLocaleString('es-CO'); document.getElementById('progress-fill').style.width = percentage + '%'; document.getElementById('progress-pct').textContent = percentage + '%'; document.getElementById('remaining').textContent = '$' + remaining.toLocaleString('es-CO') + ' disponible'; let categorySummary = ''; for (const [cat, data] of Object.entries(BUDGET_DATA)) { const catTotal = data.items.reduce((s, item) => s + item.monto, 0); const executed = payments.filter(p => p.category === cat).reduce((sum, p) => sum + p.amount, 0); const pct = Math.round((executed / catTotal) * 100); categorySummary += `<div class="summary-row"><span class="summary-label">${cat}</span><div style="text-align: right;"><div class="summary-value">${pct}%</div><div style="font-size: 12px; color: #999;">$${executed.toLocaleString('es-CO')} / $${catTotal.toLocaleString('es-CO')}</div></div></div>`; } document.getElementById('category-summary').innerHTML = categorySummary; let methodSummary = ''; const methods = new Set(payments.map(p => p.method)); methods.forEach(method => { const methodTotal = payments.filter(p => p.method === method).reduce((sum, p) => sum + p.amount, 0); methodSummary += `<div class="summary-row"><span class="summary-label">${method}</span><span class="summary-value">$${methodTotal.toLocaleString('es-CO')}</span></div>`; }); document.getElementById('method-summary').innerHTML = methodSummary || '<p style="color: #999; font-size: 14px;">Sin pagos registrados</p>'; }
-    function updateHistory() { const list = document.getElementById('payment-list'); const empty = document.getElementById('empty-message'); if (payments.length === 0) { list.innerHTML = ''; empty.style.display = 'block'; return; } empty.style.display = 'none'; list.innerHTML = payments.map((p, i) => `<div class="list-item"><div class="list-item-left"><div class="list-item-desc">${p.subcategory}</div><div class="list-item-cat">${p.category} · ${p.method}</div>${p.description ? `<div class="list-item-meta">"${p.description}"</div>` : ''}<div class="list-item-meta">${p.date}</div>${p.synced ? `<div class="list-item-badge">✓ Sincronizado</div>` : ''}</div><div><div class="list-item-amount">$${p.amount.toLocaleString('es-CO')}</div><button class="delete-btn" onclick="deletePayment(${i})">Eliminar</button></div></div>`).join(''); }
+    function updateHistory() { const list = document.getElementById('payment-list'); const empty = document.getElementById('empty-message'); if (payments.length === 0) { list.innerHTML = ''; empty.style.display = 'block'; return; } empty.style.display = 'none'; list.innerHTML = payments.map((p, i) => `<div class="list-item"><div class="list-item-left"><div class="list-item-desc">${p.subcategory}</div><div class="list-item-cat">${p.category} · ${p.method}</div>${p.description ? `<div class="list-item-meta">"${p.description}"</div>` : ''}<div class="list-item-meta">${p.date}</div></div><div><div class="list-item-amount">$${p.amount.toLocaleString('es-CO')}</div><button class="delete-btn" onclick="deletePayment(${i})">Eliminar</button></div></div>`).join(''); }
     function deletePayment(index) { if (confirm('¿Eliminar este pago?')) { payments.splice(index, 1); localStorage.setItem(`payments_${getCurrentMonthKey()}`, JSON.stringify(payments)); updateHistory(); } }
-    function updateSyncStatus() { const unsyncedCount = payments.filter(p => !p.synced).length; document.getElementById('unsync-count').textContent = unsyncedCount; const history = payments.filter(p => p.synced).reverse().slice(0, 10); if (history.length === 0) { document.getElementById('sync-history').innerHTML = '<p style="padding: 16px; color: #999;">Sin registros sincronizados</p>'; return; } document.getElementById('sync-history').innerHTML = history.map(p => `<div class="list-item"><div class="list-item-left"><div style="font-size: 13px; color: #1a1a1a;">${p.subcategory}</div><div style="font-size: 11px; color: #999; margin-top: 2px;">Sincronizado ${new Date(p.syncedAt).toLocaleString('es-CO')}</div></div><div style="color: #388e3c; font-size: 13px; font-weight: 500;">$${p.amount.toLocaleString('es-CO')}</div></div>`).join(''); }
-    async function syncToSheets() { const unsyncedPayments = payments.filter(p => !p.synced); if (unsyncedPayments.length === 0) { showAlert('No hay registros sin sincronizar', 'error'); return; } const btn = document.getElementById('sync-btn'); btn.disabled = true; btn.textContent = 'Sincronizando...'; try { const payload = { monthKey: getCurrentMonthKey(), payments: unsyncedPayments }; const response = await fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'application/json' } }); const result = await response.json(); if (result.success) { unsyncedPayments.forEach(p => { const payment = payments.find(pym => pym.id === p.id); if (payment) { payment.synced = true; payment.syncedAt = new Date().toISOString(); } }); localStorage.setItem(`payments_${getCurrentMonthKey()}`, JSON.stringify(payments)); btn.disabled = false; btn.textContent = 'Sincronizar ahora'; showAlert(`✓ ${result.processed} registros sincronizados exitosamente`, 'success'); updateSyncStatus(); updateHistory(); } else { throw new Error(result.mensaje || result.error || 'Error desconocido'); } } catch (error) { btn.disabled = false; btn.textContent = 'Sincronizar ahora'; showAlert('Error: ' + error.message, 'error'); } }
-    function showAlert(message, type) { const alertDiv = document.getElementById('sync-alert'); const className = type === 'success' ? 'alert-success' : 'alert-error'; alertDiv.innerHTML = `<div class="alert ${className}">${message}</div>`; setTimeout(() => { alertDiv.innerHTML = ''; }, 5000); }
+    function updateExportStatus() { document.getElementById('export-count').textContent = payments.length; }
+    function downloadExcel() { const monthKey = getCurrentMonthKey(); const [year, month] = monthKey.split('_'); const monthNames = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']; const fileName = `Presupuesto_${monthNames[parseInt(month)]}_${year}.xlsx`; const data = [['Fecha', 'Categoría', 'Subcategoría', 'Descripción', 'Monto', 'Medio de Pago']]; payments.forEach(p => { data.push([p.date, p.category, p.subcategory, p.description || '', p.amount, p.method]); }); const ws = XLSX.utils.aoa_to_sheet(data); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Registro'); XLSX.writeFile(wb, fileName); alert('✓ Archivo descargado: ' + fileName); }
     document.addEventListener('DOMContentLoaded', () => { initCategories(); const today = new Date(); document.getElementById('date').valueAsDate = today; const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']; document.getElementById('current-month').textContent = monthNames[today.getMonth()] + ' ' + today.getFullYear(); });
-    if ('serviceWorker' in navigator) { navigator.serviceWorker.register('data:application/javascript,self.addEventListener("install",e=>self.skipWaiting());self.addEventListener("activate",e=>e.waitUntil(clients.claim()));'); }
   </script>
 </body>
 </html>
