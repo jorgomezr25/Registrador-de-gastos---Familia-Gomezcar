@@ -6,7 +6,6 @@
   <meta name="theme-color" content="#ffffff">
   <meta name="description" content="Registrador de gastos - Familia Gomezcar">
   <title>Presupuesto Familia</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f5f5f5; }
@@ -29,8 +28,6 @@
     .btn-primary { background: #378add; color: white; }
     .btn-primary:active { opacity: 0.9; }
     .btn-primary:disabled { background: #ccc; cursor: not-allowed; }
-    .btn-secondary { background: #f0f0f0; color: #333; }
-    .btn-secondary:active { opacity: 0.8; }
     .card { background: white; border-radius: 8px; border: 0.5px solid #e0e0e0; padding: 16px; margin-bottom: 12px; }
     .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
     .stat { background: #f9f9f9; padding: 12px; border-radius: 6px; border: 0.5px solid #e0e0e0; }
@@ -43,7 +40,6 @@
     .list-item-cat { font-size: 12px; color: #999; margin-top: 2px; }
     .list-item-meta { font-size: 11px; color: #bbb; margin-top: 2px; }
     .list-item-amount { font-size: 15px; font-weight: 500; color: #378add; text-align: right; white-space: nowrap; }
-    .list-item-badge { display: inline-block; padding: 2px 6px; font-size: 10px; background: #e3f2fd; color: #1976d2; border-radius: 3px; margin-top: 4px; }
     .empty-state { text-align: center; padding: 40px 16px; color: #999; }
     .empty-state p { font-size: 14px; }
     .delete-btn { background: #f5f5f5; border: none; color: #999; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; }
@@ -56,9 +52,6 @@
     .progress-fill { height: 100%; background: #378add; border-radius: 3px; }
     .sync-section { background: #f0f7ff; border: 0.5px solid #90caf9; border-radius: 6px; padding: 12px; margin-bottom: 16px; }
     .sync-status { font-size: 13px; color: #1976d2; margin-bottom: 8px; }
-    .alert { padding: 12px; border-radius: 6px; margin-bottom: 12px; font-size: 13px; }
-    .alert-success { background: #e8f5e9; color: #2e7d32; border: 0.5px solid #81c784; }
-    .alert-error { background: #ffebee; color: #c62828; border: 0.5px solid #ef5350; }
   </style>
 </head>
 <body>
@@ -168,13 +161,13 @@
             <div class="sync-status">
               Registros en este mes: <strong id="export-count">0</strong>
             </div>
-            <button class="btn btn-primary" onclick="downloadExcel()">📊 Descargar como Excel</button>
+            <button class="btn btn-primary" onclick="downloadCSV()">📊 Descargar como CSV</button>
           </div>
           <div class="card" style="margin-top: 0; padding: 12px; background: #f9f9f9;">
             <div style="font-size: 13px; color: #666; line-height: 1.6;">
               <strong>Cómo usar:</strong><br>
-              1. Clickea "Descargar como Excel"<br>
-              2. Se descargará un archivo .xlsx<br>
+              1. Clickea "Descargar como CSV"<br>
+              2. Se descargará un archivo .csv<br>
               3. Abre en Google Sheets (Archivo → Abrir → Sube el archivo)<br>
               4. ¡Listo! Tienes todos tus registros en Sheets
             </div>
@@ -206,7 +199,7 @@
     function updateHistory() { const list = document.getElementById('payment-list'); const empty = document.getElementById('empty-message'); if (payments.length === 0) { list.innerHTML = ''; empty.style.display = 'block'; return; } empty.style.display = 'none'; list.innerHTML = payments.map((p, i) => `<div class="list-item"><div class="list-item-left"><div class="list-item-desc">${p.subcategory}</div><div class="list-item-cat">${p.category} · ${p.method}</div>${p.description ? `<div class="list-item-meta">"${p.description}"</div>` : ''}<div class="list-item-meta">${p.date}</div></div><div><div class="list-item-amount">$${p.amount.toLocaleString('es-CO')}</div><button class="delete-btn" onclick="deletePayment(${i})">Eliminar</button></div></div>`).join(''); }
     function deletePayment(index) { if (confirm('¿Eliminar este pago?')) { payments.splice(index, 1); localStorage.setItem(`payments_${getCurrentMonthKey()}`, JSON.stringify(payments)); updateHistory(); } }
     function updateExportStatus() { document.getElementById('export-count').textContent = payments.length; }
-    function downloadExcel() { const monthKey = getCurrentMonthKey(); const [year, month] = monthKey.split('_'); const monthNames = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']; const fileName = `Presupuesto_${monthNames[parseInt(month)]}_${year}.xlsx`; const data = [['Fecha', 'Categoría', 'Subcategoría', 'Descripción', 'Monto', 'Medio de Pago']]; payments.forEach(p => { data.push([p.date, p.category, p.subcategory, p.description || '', p.amount, p.method]); }); const ws = XLSX.utils.aoa_to_sheet(data); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Registro'); XLSX.writeFile(wb, fileName); alert('✓ Archivo descargado: ' + fileName); }
+    function downloadCSV() { const monthKey = getCurrentMonthKey(); const [year, month] = monthKey.split('_'); const monthNames = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']; const fileName = `Presupuesto_${monthNames[parseInt(month)]}_${year}.csv`; let csv = 'Fecha,Categoría,Subcategoría,Descripción,Monto,Medio de Pago\n'; payments.forEach(p => { csv += `"${p.date}","${p.category}","${p.subcategory}","${p.description || ''}",${p.amount},"${p.method}"\n`; }); const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement('a'); const url = URL.createObjectURL(blob); link.setAttribute('href', url); link.setAttribute('download', fileName); link.style.visibility = 'hidden'; document.body.appendChild(link); link.click(); document.body.removeChild(link); alert('✓ Descargado: ' + fileName); }
     document.addEventListener('DOMContentLoaded', () => { initCategories(); const today = new Date(); document.getElementById('date').valueAsDate = today; const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']; document.getElementById('current-month').textContent = monthNames[today.getMonth()] + ' ' + today.getFullYear(); });
   </script>
 </body>
